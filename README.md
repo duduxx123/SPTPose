@@ -1,5 +1,5 @@
 # Enhanced Human Pose Estimation via Self-Distilled and Token-Pruned Transformer
-## The code is still being organized, with some sections requiring completion. It is currently unable to run.
+
 The code corresponds to the paper submitted to The Visual Computer.
 
 ## Installation & Quick Start
