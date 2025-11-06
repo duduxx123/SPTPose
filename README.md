@@ -22,7 +22,10 @@ Train `python ./tools/train.py`
 Test `python ./tools/test.py`
 
 ## Models
-SPTPose-B comming soon
-SPTPose-S-v1 comming soon
-SPTPose-S-v2 comming soon
-SPTPose-T comming soon
+| Name | download |
+| ---- | -------- |
+|SPTPose-T|comming soon|
+|SPTPose-S-v1|comming soon|
+|SPTPose-S-v2|comming soon|
+|SPTPose-B|comming soon|
+
