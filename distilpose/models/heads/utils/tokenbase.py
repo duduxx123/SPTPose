@@ -19,7 +19,6 @@ class Residual(nn.Module):
     def forward(self, x, **kwargs):
         tmp_x,tok_attn,attn = self.fn(x, **kwargs)
         return tmp_x + x, tok_attn, attn
-        #return self.fn(x, **kwargs) + x
 
 class PreNorm(nn.Module):
     def __init__(self, dim, fn, fusion_factor=1):
@@ -29,7 +28,6 @@ class PreNorm(nn.Module):
     def forward(self, x, **kwargs):
         x,tok_attn,attn = self.fn(self.norm(x), **kwargs)
         return x,tok_attn,attn
-        #return self.fn(self.norm(x), **kwargs)
 
 class FeedForward(nn.Module):
     def __init__(self, dim, hidden_dim, dropout = 0.):
@@ -87,16 +85,11 @@ class Attention(nn.Module):
             J = self.num_keypoints
             tok_attn = attn[:, :, :J, J:]                        # (B, H, J, HW)
             tok_attn = tok_attn.sum(1) / self.heads              # (B, J, HW), average all head
-            #####################  生产关键点注意力图可视化代码,使用时forward()的return_tok要设置为True保证非剪枝时也能获取大小
-            # print(tok_attn.shape)  # 32,17,256(16*16)
-            # tok_attn_reshaped = self.pad_and_reshape_tok_attn(tok_attn)  # 剪枝之后需要填充,填充之后似乎混乱了
-            # self.visualize_tok_attn(tok_attn, keypoint_index=0, sample_index=0)
-            ####################
             return out, tok_attn, attn
         else:
             return out,None,attn
 
-    def pad_and_reshape_tok_attn(self, tok_attn, target_length=256):# 用于填充剪枝后的注意力图
+    def pad_and_reshape_tok_attn(self, tok_attn, target_length=256):
         """
         Pad tok_attn to the target length and reshape to 16x16.
 
@@ -117,7 +110,7 @@ class Attention(nn.Module):
         tok_attn_reshaped = tok_attn.view(batch_size, num_keypoints, 16, 16)
         return tok_attn_reshaped
 
-    def visualize_tok_attn(self,tok_attn, keypoint_index=0, sample_index=0): # 用于可视化注意力图
+    def visualize_tok_attn(self,tok_attn, keypoint_index=0, sample_index=0):
         """
         Visualize the attention map for a specific keypoint in a specific sample.
 
@@ -817,11 +810,6 @@ class SDPose(nn.Module):
         self.dropout = nn.Dropout(emb_dropout)
         self.to_pos = nn.Softplus()
 
-        # transformer
-        # self.transformer_layer1= Transformer_sd(dim, depth, heads, mlp_dim, dropout,
-        #                                     num_keypoints=num_keypoints, all_attn=self.all_attn,
-        #                                     scale_with_head=True)
-        # 改为使用PPT剪枝的Transformer块
         self.transformer_layer1 = Transformer(dim, depth, heads, mlp_dim, dropout,
                                                  num_keypoints=num_keypoints, all_attn=self.all_attn,
                                                  scale_with_head=True)
@@ -915,7 +903,6 @@ class SDPose(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
-    # SDPose-PPT的前向传播
     def forward(self, feature, mask=None, ratio=0.7):
         p = self.patch_size
         # transformer
@@ -933,7 +920,6 @@ class SDPose(nn.Module):
             x += self.pos_embedding[:, :(n + self.num_keypoints)]
         x = self.dropout(x)
 
-        # 加入自蒸馏
         output_list = []
         pos = None
         flag = True
@@ -960,45 +946,6 @@ class SDPose(nn.Module):
             output_list.append(output)
 
         return output_list
-
-
-    # SDPose的前向传播
-    # def forward(self, feature, mask = None):
-    #     p = self.patch_size
-    #     # transformer
-    #     x = rearrange(feature, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1 = p[0], p2 = p[1])
-    #     x = self.patch_to_embedding(x)
-    #
-    #     b, n, _ = x.shape
-    #
-    #     keypoint_tokens = repeat(self.keypoint_token, '() n d -> b n d', b = b)
-    #     if self.pos_embedding_type in ["sine","sine-full"] :
-    #         x += self.pos_embedding[:, :n]
-    #         x = torch.cat((keypoint_tokens, x), dim=1)
-    #     else:
-    #         x = torch.cat((keypoint_tokens, x), dim=1)
-    #         x += self.pos_embedding[:, :(n + self.num_keypoints)]
-    #     x = self.dropout(x)
-    #
-    #     output_list = []
-    #
-    #     for _ in range(self.cycle_num):
-    #         x, attn = self.transformer_layer1(x,mask,self.pos_embedding)
-    #         x = x[-1]
-    #         kpt_token = x[:, 0:self.num_keypoints]
-    #         vis_token = x[:, self.num_keypoints:]
-    #         tmp_res = self.to_keypoint_token(kpt_token)
-    #         tmp_res = self.mlp_head(tmp_res)
-    #         tmp_res = rearrange(tmp_res,'b c (p1 p2) -> b c p1 p2',p1=self.heatmap_size[0],p2=self.heatmap_size[1])
-    #         output = EasyDict(
-    #             vis_token=vis_token,
-    #             kpt_token=kpt_token,
-    #             pred=tmp_res,
-    #             attn=attn[-1]
-    #         )
-    #         output_list.append(output)
-    #
-    #     return output_list
 
 class RLESDPose_base(nn.Module):
     def __init__(self, *, feature_size, patch_size, num_keypoints, dim, depth, heads, 
