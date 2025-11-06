@@ -20,3 +20,9 @@ pip3 install -r requirements.txt
 Train `python ./tools/train.py`
 
 Test `python ./tools/test.py`
+
+## Models
+SPTPose-B comming soon
+SPTPose-S-v1 comming soon
+SPTPose-S-v2 comming soon
+SPTPose-T comming soon
