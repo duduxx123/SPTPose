@@ -26,8 +26,8 @@ except ImportError:
 
 def parse_args():
     parser = argparse.ArgumentParser(description='mmpose test model')
-    parser.add_argument('config',nargs='?',default='../configs/body/2d_kpt_sview_rgb_img/sdpose/coco/sdpose_b_hr32_coco_256x192.py', help='test config file path')
-    parser.add_argument('checkpoint',nargs='?',default='./work_dirs/sdpose_b_hr32_coco_256x192/epoch_288-AP7481.pth', help='checkpoint file')
+    parser.add_argument('config',default='', help='test config file path')
+    parser.add_argument('checkpoint',default='', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
     parser.add_argument(
         '--work-dir', help='the dir to save evaluation results')
@@ -138,13 +138,6 @@ def main():
 
     # build the model and load checkpoint
     model = build_posenet(cfg.model)
-
-
-    # 复现论文中的图2
-    # print(model.keypoint_head.tokenpose.transformer_layer1)
-    # from kehsihua import plot_tokenpose_last_transformer_layer_density
-    # plot_tokenpose_last_transformer_layer_density(model,binwidth=0.05)
-
 
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
