@@ -98,10 +98,8 @@ class CAM_Module(nn.Module):
         # N, C, C, bmm 批次矩阵乘法
         energy = torch.bmm(proj_query, proj_key)
 
-        # 这里实现了softmax用最后一维的最大值减去了原始数据, 获得了一个不是太大的值
-        # 沿着最后一维的C选择最大值, keepdim保证输出和输入形状一致, 除了指定的dim维度大小为1
         energy_new = torch.max(energy, -1, keepdim=True)
-        energy_new = energy_new[0].expand_as(energy)  # 复制的形式扩展到energy的尺寸
+        energy_new = energy_new[0].expand_as(energy)
         energy_new = energy_new - energy
         attention = self.softmax(energy_new)
 
@@ -127,7 +125,6 @@ class StemNet(BaseBackbone):
         self.relu = nn.ReLU(inplace=True)
         self.layer1 = self._make_layer(Bottleneck, 64, 4)
 
-        # CA注意力
         self.CA = CAM_Module()
 
     def _make_layer(self, block, planes, blocks, stride=1):
@@ -188,18 +185,7 @@ class StemNet(BaseBackbone):
         x = self.relu(x)
         x = self.layer1(x)
 
-        # 添加CA注意力
-        # print('使用CA注意力')
         x = self.CA(x)
         return x 
 
-    # def train(self, mode=True):
-    #     """Convert the model into training mode."""
-    #     super().train(mode)
-    #     self._freeze_stages()
-    #     if mode and self.norm_eval:
-    #         for m in self.modules():
-    #             # trick: eval have effect on BatchNorm only
-    #             if isinstance(m, _BatchNorm):
-    #                 m.eval()
 
