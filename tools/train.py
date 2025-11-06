@@ -21,12 +21,9 @@ from distilpose.models import build_posenet
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a pose model')
-    parser.add_argument('config',nargs='?',default='../configs/body/2d_kpt_sview_rgb_img/sdpose/coco/sdpose_s_v1_stemnet_coco_256x192.py', help='train config file path')
+    parser.add_argument('config',default='', help='train config file path')
     parser.add_argument('--work-dir', help='the dir to save logs and models')
-    parser.add_argument(
-        '--resume-from', default='',  # 从哪里恢复训练
-        help='the checkpoint file to resume from')
-    # parser.add_argument('--resume-from', help='the checkpoint file to resume from')
+    parser.add_argument('--resume-from', help='the checkpoint file to resume from')
 
     parser.add_argument(
         '--no-validate',
@@ -101,9 +98,7 @@ def main():
                                 osp.splitext(osp.basename(args.config))[0])
     if args.resume_from is not None:
         cfg.resume_from = args.resume_from
-    # auto-resume
-    #elif 'latest.pth' in os.listdir(cfg.work_dir):
-    #    cfg.resume_from = osp.join(cfg.work_dir, 'latest.pth')
+
     if args.gpu_ids is not None:
         cfg.gpu_ids = args.gpu_ids
     else:
@@ -134,14 +129,6 @@ def main():
     # environment info and seed, which will be logged
     meta = dict()
     # log env info
-    '''
-    env_info_dict = collect_env()
-    env_info = '\n'.join([(f'{k}: {v}') for k, v in env_info_dict.items()])
-    dash_line = '-' * 60 + '\n'
-    logger.info('Environment info:\n' + dash_line + env_info + '\n' +
-                dash_line)
-    meta['env_info'] = env_info
-    '''
     meta['env_info'] = None
 
     # log some basic info
@@ -156,34 +143,7 @@ def main():
     cfg.seed = seed
     meta['seed'] = seed
 
-    #这里创建的model似乎不包含backbone部分，只有keypointsHead部分
     model = build_posenet(cfg.model)
-
-    # 手动加载权重
-    # pretrained_weights = '../tools/work_dirs/sdpose_s_v1_stemnet_coco_256x192/SD-PPT/best_AP_epoch_276.pth'
-    # from mmcv.runner import load_checkpoint
-    # checkpoint = load_checkpoint(model, pretrained_weights, map_location='cpu')
-    # # 只加载 keypoint_head 部分的权重
-    # if 'state_dict' in checkpoint:
-    #     state_dict = checkpoint['state_dict']
-    # else:
-    #     state_dict = checkpoint
-    # # 过滤出 keypoint_head 的权重
-    # head_state_dict = {k: v for k, v in state_dict.items() if k.startswith('keypoint_head.')}
-    # # 加载权重到模型的 keypoint_head
-    # model.keypoint_head.load_state_dict(head_state_dict, strict=False)
-
-    # 加载sdpose-b的sdpose head部分权重
-    # pretrained_weights = '../checkpoints/best_AP_epoch_290.pth'
-    # from mmcv.runner import load_checkpoint
-    # checkpoint = load_checkpoint(model, pretrained_weights, map_location='cpu')
-    # if 'state_dict' in checkpoint:
-    #     state_dict = checkpoint['state_dict']
-    # else:
-    #     state_dict = checkpoint
-    # head_state_dict = {k.replace('keypoint_head.', ''): v for k, v in state_dict.items() if k.startswith('keypoint_head.')}
-    # model.keypoint_head.load_state_dict(head_state_dict)
-
 
     datasets = [build_dataset(cfg.data.train)]
 
