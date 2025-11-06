@@ -14,7 +14,7 @@ except ImportError:
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
-    parser.add_argument('config',nargs='?',default='../configs/body/2d_kpt_sview_rgb_img/sdpose/coco/rlse_sdpose_s_v1.py', help='train config file path')
+    parser.add_argument('config',default='', help='train config file path')
     parser.add_argument(
         '--shape',
         type=int,
