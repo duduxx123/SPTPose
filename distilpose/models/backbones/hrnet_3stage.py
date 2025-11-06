@@ -234,10 +234,8 @@ class CAM_Module(nn.Module):
         # N, C, C, bmm 批次矩阵乘法
         energy = torch.bmm(proj_query, proj_key)
 
-        # 这里实现了softmax用最后一维的最大值减去了原始数据, 获得了一个不是太大的值
-        # 沿着最后一维的C选择最大值, keepdim保证输出和输入形状一致, 除了指定的dim维度大小为1
         energy_new = torch.max(energy, -1, keepdim=True)
-        energy_new = energy_new[0].expand_as(energy)  # 复制的形式扩展到energy的尺寸
+        energy_new = energy_new[0].expand_as(energy)
         energy_new = energy_new - energy
         attention = self.softmax(energy_new)
 
@@ -369,7 +367,7 @@ class HRNet_3stage(nn.Module):
         num_blocks = self.stage1_cfg['num_blocks'][0]
 
         block = self.blocks_dict[block_type]
-        stage1_out_channels = num_channels * get_expansion(block)  # 改之前是128，改后是256
+        stage1_out_channels = num_channels * get_expansion(block)
 
         self.layer1 = self._make_layer(block, 64, stage1_out_channels,
                                        num_blocks)
@@ -403,7 +401,6 @@ class HRNet_3stage(nn.Module):
             self.stage3_cfg, num_channels,
             multiscale_output=self.stage3_cfg.get('multiscale_output', False))
 
-        # 加入CAM
         self.CA = CAM_Module()
 
         # stage 4
@@ -628,19 +625,8 @@ class HRNet_3stage(nn.Module):
                 x_list.append(y_list[i])
         y_list = self.stage3(x_list)
 
-        # x_list = []
-        # for i in range(self.stage4_cfg['num_branches']):
-        #     if self.transition3[i] is not None:
-        #         x_list.append(self.transition3[i](y_list[-1]))
-        #     else:
-        #         x_list.append(y_list[i])
-        # y_list = self.stage4(x_list)
-
-        # return y_list
-        # 加入CAM
         res = self.CA(y_list[0])
         return res
-        # return y_list[0]
 
     def train(self, mode=True):
         """Convert the model into training mode."""
