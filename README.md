@@ -1,7 +1,5 @@
 # Enhanced Human Pose Estimation via Self-Distilled and Token-Pruned Transformer
 
-The code corresponds to the paper submitted to The Visual Computer.
-
 ## Installation & Quick Start
 SPTPose was developed with reference to SDPose. To run the project, please refer to the <a href="https://github.com/MartyrPenink/SDPose">SDPose repository</a>.
 ```
